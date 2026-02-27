@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vienna Client - Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b090f; 
+            --color-1: #4e3b4f; 
+            --color-2: #c5b4e3;
+            --text-light: #f5f5f0; 
+            --text-muted: rgba(245, 245, 240, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.03); 
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-light); 
+            min-height: 100vh; 
+            overflow: hidden; 
+            position: relative; 
+        }
+        
+        /* ФОНОВЫЙ СВЕТ */
+        .ambient-light { 
+            position: fixed; 
+            border-radius: 50%; 
+            filter: blur(150px); 
+            z-index: -1; 
+            opacity: 0.6; 
+            animation: floatGlow 10s infinite alternate ease-in-out; 
+        }
+        
+        .light-1 { 
+            top: -10%; 
+            left: -10%; 
+            width: 50vw; 
+            height: 50vw; 
+            background: var(--color-1); 
+        }
+        
+        .light-2 { 
+            bottom: -10%; 
+            right: -10%; 
+            width: 40vw; 
+            height: 40vw; 
+            background: var(--color-2); 
+            animation-delay: -5s; 
+        }
+        
+        @keyframes floatGlow { 
+            0% { transform: translate(0, 0) scale(1); } 
+            100% { transform: translate(50px, 30px) scale(1.1); } 
+        }
+
+        /* ЭКРАН ЗАГРУЗКИ */
+        #splash-screen { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: var(--bg-color); 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            cursor: pointer; 
+            transition: 1.2s; 
+        }
+        
+        #splash-screen.hidden { 
+            opacity: 0; 
+            visibility: hidden; 
+            transform: scale(1.05); 
+        }
+        
+        .splash-title { 
+            font-size: 6vw; 
+            font-weight: 200; 
+            letter-spacing: 15px; 
+            text-transform: uppercase; 
+            animation: textReveal 2s forwards; 
+            opacity: 0; 
+            transform: translateY(20px); 
+        }
+        
+        .splash-title strong { 
+            font-weight: 800; 
+            background: linear-gradient(to right, var(--color-2), #fff); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        
+        .splash-hint { 
+            position: absolute; 
+            bottom: 60px; 
+            font-size: 0.8em; 
+            letter-spacing: 4px; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            animation: pulseHint 2.5s infinite; 
+        }
+        
+        @keyframes textReveal { 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        @keyframes pulseHint { 
+            0%, 100% { opacity: 0.2; } 
+            50% { opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.3); } 
+        }
+
+        /* ШАПКА */
+        header { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 80px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 5%; 
+            background: rgba(11, 9, 15, 0.5); 
+            backdrop-filter: blur(20px); 
+            border-bottom: 1px solid var(--glass-border); 
+            z-index: 1000; 
+        }
+        
+        .header-left { flex: 1; display: flex; justify-content: flex-start; }
+        .logo { font-size: 1.5em; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+        
+        .header-center { flex: 1; display: flex; justify-content: center; gap: 40px; }
+        
+        .header-center a { 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            font-weight: 600; 
+            font-size: 1em; 
+            transition: 0.3s; 
+            cursor: pointer; 
+        }
+        
+        .header-center a:hover, .header-center a.active { color: var(--text-light); }
+
+        .header-right { 
+            flex: 1; 
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        
+        .header-right button { 
+            background: transparent; 
+            color: var(--text-light); 
+            border: 1px solid var(--glass-border); 
+            padding: 10px 24px; 
+            border-radius: 30px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        
+        .header-right button.primary-btn { background: var(--text-light); color: #111; border: none; }
+        .header-right button.admin-btn { border-color: #ff4c4c; color: #ff4c4c; }
+        .header-right button:hover { background: rgba(255,255,255,0.1); }
+        .header-right button.primary-btn:hover { background: var(--color-2); }
+        
+        .user-name { font-weight: 600; color: var(--color-2); letter-spacing: 1px; }
+
+        /* Кнопка смены языка */
+        .lang-switch { 
+            cursor: pointer; 
+            font-weight: 800; 
+            color: var(--color-2); 
+            margin-right: 15px; 
+            padding: 5px; 
+            transition: 0.3s; 
+        }
+        
+        .lang-switch:hover { color: var(--text-light); transform: scale(1.1); }
+
+        /* Анимация текста при смене языка */
+        .fade-text { transition: opacity 0.3s ease-in-out; }
+        .fade-text.hidden { opacity: 0; }
+
+        /* СЕКЦИИ И КОНТЕНТ */
+        .page-section { 
+            display: none; 
+            padding-top: 120px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            min-height: 100vh; 
+        }
+        
+        .page-section.active { 
+            display: block; 
+            animation: fadeIn 0.3s ease-in-out forwards; 
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+
+        .hero { text-align: center; padding: 10vh 20px; }
+        
+        .hero h1 { 
+            font-size: 4em; 
+            font-weight: 800; 
+            margin-bottom: 20px; 
+            background: linear-gradient(to right, var(--text-light), var(--color-2)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        
+        .hero p { font-size: 1.2em; color: var(--text-muted); max-width: 600px; margin: 0 auto 40px auto; }
+        
+        /* КАРТОЧКИ ФИЧЕЙ */
+        .features { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+            gap: 30px; 
+            padding: 20px; 
+        }
+        
+        .feature-card { 
+            background: var(--glass-bg); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            backdrop-filter: blur(10px); 
+            text-align: center; 
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            cursor: default; 
+        }
+        
+        .feature-card:hover { 
+            transform: translateY(-10px); 
+            background: rgba(255, 255, 255, 0.05); 
+            border-color: rgba(197, 180, 227, 0.3); 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); 
+        }
+        
+        .feature-card h3 { font-size: 1.4em; margin-bottom: 15px; font-weight: 600; }
+        .feature-card p { color: var(--text-muted); line-height: 1.5; font-size: 0.95em; }
+
+        /* МОДАЛЬНЫЕ ОКНА */
+        .modal { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(15px); 
+            z-index: 10000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            opacity: 0; 
+            visibility: hidden; 
+            transition: 0.3s; 
+            overflow-y: auto; 
+        }
+        
+        .modal.active { opacity: 1; visibility: visible; }
+        
+        .modal-content { 
+            background: rgba(20, 16, 26, 0.8); 
+            border: 1px solid var(--glass-border); 
+            padding: 50px 40px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 420px; 
+            transform: scale(0.95); 
+            transition: 0.3s; 
+            position: relative; 
+            margin-top: 15vh; 
+            margin-bottom: 50px; 
+        }
+        
+        .modal-content.large { max-width: 800px; }
+        .modal.active .modal-content { transform: scale(1); }
+        
+        .close { 
+            position: absolute; 
+            top: 20px; 
+            right: 25px; 
+            font-size: 24px; 
+            color: var(--text-muted); 
+            cursor: pointer; 
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 15px 20px; 
+            margin-bottom: 15px; 
+            background: rgba(0, 0, 0, 0.3); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px; 
+            color: var(--text-light); 
+            font-family: inherit; 
+            outline: none; 
+            transition: 0.3s; 
+        }
+        
+        input:focus { border-color: var(--color-2); }
+        
+        .submit-btn { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--text-light); 
+            color: #111; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: 0.3s;
+        }
+        
+        .submit-btn:hover { background: var(--color-2); }
+        
+        /* УВЕДОМЛЕНИЯ */
+        #notification { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            background: var(--color-2); 
+            color: #111; 
+            padding: 15px 25px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            transform: translateY(100px); 
+            opacity: 0; 
+            transition: 0.4s; 
+            z-index: 99999; 
+        }
+        
+        #notification.show { transform: translateY(0); opacity: 1; }
+        .hidden-step { display: none; }
+
+        /* ТАБЛИЦА АДМИНКИ */
+        .users-table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: left; }
+        .users-table th, .users-table td { padding: 12px; border-bottom: 1px solid var(--glass-border); }
+        .users-table th { color: var(--color-2); font-weight: 600; }
+        
+        .action-btn { 
+            padding: 6px 12px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 0.8em; 
+            margin-right: 5px; 
+            font-weight: bold; 
+            color: white;
+        }
+        
+        .btn-ban { background: #ff4c4c; } 
+        .btn-unban { background: #4caf50; }
+        .btn-prom { background: #ff9800; } 
+        .btn-dem { background: #757575; }
+        .banned-text { color: #ff4c4c; text-decoration: line-through; }
+    </style>
+</head>
+<body>
+
+    <!-- Фоновые элементы и уведомления -->
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+    <div id="notification">Уведомление</div>
+
+    <!-- Загрузочный экран -->
+    <div id="splash-screen" onclick="hideSplash()">
+        <h1 class="splash-title">Vienna <strong>Client</strong></h1>
+        <p class="splash-hint" data-lang="splash_hint">нажмите чтоб продолжить</p>
+    </div>
+
+    <!-- Шапка сайта -->
+    <header>
+        <div class="header-left">
+            <div class="logo">Vienna</div>
+        </div>
+        
+        <div class="header-center">
+            <a onclick="switchPage('home')" id="link-home" class="active" data-lang="nav_home">Главная</a>
+            <a onclick="switchPage('buy')" id="link-buy" data-lang="nav_buy">Покупка</a>
+        </div>
+
+        <div class="header-right" id="auth-buttons">
+            <div class="lang-switch" onclick="toggleLang()" id="langBtn">EN</div>
+            <button onclick="openModal('login')" data-lang="btn_login">Вход</button>
+            <button class="primary-btn" onclick="openModal('register')" data-lang="btn_register">Регистрация</button>
+        </div>
+    </header>
+
+    <!-- СЕКЦИЯ: ГЛАВНАЯ -->
+    <main id="page-home" class="page-section active">
+        <section class="hero">
+            <h1 data-lang="hero_title">Доминируй в Игре</h1>
+            <p data-lang="hero_desc">Эксклюзивный приватный клиент для Minecraft 1.8.9. Продвинутые алгоритмы обхода античитов и абсолютная плавность.</p>
+        </section>
+        
+        <section class="features">
+            <div class="feature-card">
+                <h3 data-lang="f1_title">Bypass Модули</h3>
+                <p data-lang="f1_desc">Система пакетов обходит современные проверки.</p>
+            </div>
+            <div class="feature-card">
+                <h3 data-lang="f2_title">PvP Ассистент</h3>
+                <p data-lang="f2_desc">Тонкая настройка Reach и Velocity.</p>
+            </div>
+            <div class="feature-card">
+                <h3 data-lang="f3_title">Интеграция Ботов</h3>
+                <p data-lang="f3_desc">Управление целой сетью прямо из GUI.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- СЕКЦИЯ: ПОКУПКА -->
+    <main id="page-buy" class="page-section">
+        <section class="hero">
+            <h1 data-lang="buy_title">Тарифы</h1>
+            <p data-lang="buy_desc">Выберите подписку для получения доступа к лоадеру.</p>
+        </section>
+        
+        <section class="features" style="max-width: 800px; margin: 0 auto;">
+            <div class="feature-card">
+                <h3 data-lang="sub_1">1 Месяц</h3>
+                <h2 style="color: var(--color-2); margin: 15px 0;">$5.00</h2>
+                <button class="submit-btn" onclick="showNotification(currentLang === 'ru' ? 'Авторизуйтесь для покупки' : 'Login to purchase')" data-lang="btn_buy">Купить</button>
+            </div>
+            <div class="feature-card">
+                <h3 data-lang="sub_2">Навсегда</h3>
+                <h2 style="color: var(--color-2); margin: 15px 0;">$25.00</h2>
+                <button class="submit-btn" onclick="showNotification(currentLang === 'ru' ? 'Авторизуйтесь для покупки' : 'Login to purchase')" data-lang="btn_buy">Купить</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ВХОД -->
+    <div id="loginModal" class="modal" onclick="closeOnOutsideClick(event, 'login')">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('login')">&times;</span>
+            <h2 data-lang="login_title">Вход</h2>
+            <form id="loginForm">
+                <input type="text" id="logUsername" placeholder="Логин" required>
+                <input type="password" id="logPassword" placeholder="Пароль" required>
+                <button type="submit" class="submit-btn" data-lang="btn_login_submit">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: РЕГИСТРАЦИЯ (2 шага) -->
+    <div id="registerModal" class="modal" onclick="closeOnOutsideClick(event, 'register')">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('register')">&times;</span>
+            <h2 data-lang="reg_title">Регистрация</h2>
+            
+            <!-- Шаг 1: Данные -->
+            <form id="registerStep1">
+                <input type="text" id="regUsername" placeholder="Логин" required>
+                <input type="email" id="regEmail" placeholder="Email адрес" required>
+                <input type="password" id="regPassword" placeholder="Пароль" required>
+                <button type="submit" class="submit-btn" id="btnReqCode" data-lang="btn_get_code">Получить код</button>
+            </form>
+            
+            <!-- Шаг 2: Ввод кода -->
+            <form id="registerStep2" class="hidden-step">
+                <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9em;" data-lang="reg_code_desc">
+                    Мы отправили код на вашу почту. Введите его ниже.
+                </p>
+                <input type="text" id="regCode" placeholder="6-значный код" required autocomplete="off">
+                <button type="submit" class="submit-btn" data-lang="btn_verify">Подтвердить и Создать</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: ПРОФИЛЬ (Смена пароля) -->
+    <div id="profileModal" class="modal" onclick="closeOnOutsideClick(event, 'profile')">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('profile')">&times;</span>
+            <h2 data-lang="profile_title">Настройки профиля</h2>
+            <form id="profileForm">
+                <input type="text" id="profUsername" disabled style="opacity: 0.5; cursor: not-allowed;">
+                <input type="password" id="profNewPassword" placeholder="Новый пароль" required>
+                <button type="submit" class="submit-btn" data-lang="btn_save_profile">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: АДМИН-ПАНЕЛЬ -->
+    <div id="adminModal" class="modal" onclick="closeOnOutsideClick(event, 'admin')">
+        <div class="modal-content large">
+            <span class="close" onclick="closeModal('admin')">&times;</span>
+            <h2 data-lang="admin_title">Управление пользователями</h2>
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Login</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- СКРИПТЫ -->
+    <script>
+        // Единый URL бекенда
+        const API_URL = "http://127.0.0.1:8000/api";
+        
+        // Глобальные переменные состояния
+        let tempEmail = "";
+        let currentUser = null;
+        let currentLang = 'ru';
+
+        // --- СЛОВАРЬ ПЕРЕВОДОВ ---
+        const translations = {
+            ru: {
+                splash_hint: "нажмите чтоб продолжить", 
+                nav_home: "Главная", 
+                nav_buy: "Покупка",
+                btn_login: "Вход", 
+                btn_register: "Регистрация", 
+                btn_logout: "Выйти", 
+                btn_profile: "Профиль", 
+                btn_admin: "Админ-панель",
+                hero_title: "Доминируй в Игре", 
+                hero_desc: "Эксклюзивный приватный клиент для Minecraft 1.8.9. Продвинутые алгоритмы обхода античитов и абсолютная плавность.",
+                f1_title: "Bypass Модули", 
+                f1_desc: "Система пакетов обходит современные проверки.",
+                f2_title: "PvP Ассистент", 
+                f2_desc: "Тонкая настройка Reach и Velocity.",
+                f3_title: "Интеграция Ботов", 
+                f3_desc: "Управление целой сетью прямо из GUI.",
+                buy_title: "Тарифы", 
+                buy_desc: "Выберите подписку для получения доступа к лоадеру.",
+                sub_1: "1 Месяц", 
+                sub_2: "Навсегда", 
+                btn_buy: "Купить",
+                login_title: "Вход", 
+                btn_login_submit: "Войти",
+                reg_title: "Регистрация", 
+                btn_get_code: "Получить код", 
+                reg_code_desc: "Мы отправили код на вашу почту. Введите его ниже.", 
+                btn_verify: "Подтвердить и Создать",
+                admin_title: "Управление пользователями",
+                profile_title: "Настройки профиля",
+                btn_save_profile: "Сохранить изменения"
+            },
+            en: {
+                splash_hint: "click to continue", 
+                nav_home: "Home", 
+                nav_buy: "Purchase",
+                btn_login: "Login", 
+                btn_register: "Register", 
+                btn_logout: "Logout", 
+                btn_profile: "Profile", 
+                btn_admin: "Admin Panel",
+                hero_title: "Dominate the Game", 
+                hero_desc: "Exclusive private client for Minecraft 1.8.9. Advanced anti-cheat bypass algorithms and absolute smoothness.",
+                f1_title: "Bypass Modules", 
+                f1_desc: "Packet system bypasses modern server checks.",
+                f2_title: "PvP Assistant", 
+                f2_desc: "Fine tuning for Reach and Velocity.",
+                f3_title: "Bot Integration", 
+                f3_desc: "Manage an entire bot network directly from the GUI.",
+                buy_title: "Pricing", 
+                buy_desc: "Select a subscription to gain loader access.",
+                sub_1: "1 Month", 
+                sub_2: "Lifetime", 
+                btn_buy: "Purchase",
+                login_title: "Login", 
+                btn_login_submit: "Sign In",
+                reg_title: "Registration", 
+                btn_get_code: "Get Code", 
+                reg_code_desc: "We sent a code to your email. Enter it below.", 
+                btn_verify: "Verify & Create",
+                admin_title: "User Management",
+                profile_title: "Profile Settings",
+                btn_save_profile: "Save Changes"
+            }
+        };
+
+        // --- ЛОГИКА МУЛЬТИЯЗЫЧНОСТИ ---
+        function toggleLang() {
+            // Переключаем текущий язык
+            currentLang = currentLang === 'ru' ? 'en' : 'ru';
+            
+            // Кнопка показывает язык, на который МОЖНО переключиться (если сейчас EN, кнопка предлагает RU)
+            document.getElementById('langBtn').innerText = currentLang === 'ru' ? 'EN' : 'RU';
+            
+            // Запускаем анимацию исчезновения текста
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(el => el.classList.add('hidden'));
+
+            // Ждем завершения анимации CSS (0.3s), меняем текст и возвращаем прозрачность
+            setTimeout(() => {
+                updateLanguage();
+                elements.forEach(el => el.classList.remove('hidden'));
+            }, 300);
+        }
+
+        function updateLanguage() {
+            // Перевод обычных текстовых элементов
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                // Добавляем класс анимации, если его еще нет
+                if (!el.classList.contains('fade-text')) {
+                    el.classList.add('fade-text');
+                }
+                const key = el.getAttribute('data-lang');
+                if (translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+            
+            // Перевод плейсхолдеров в полях ввода (без анимации)
+            document.getElementById('logUsername').placeholder = currentLang === 'ru' ? "Логин" : "Username";
+            document.getElementById('logPassword').placeholder = currentLang === 'ru' ? "Пароль" : "Password";
+            document.getElementById('regUsername').placeholder = currentLang === 'ru' ? "Логин" : "Username";
+            document.getElementById('regEmail').placeholder = currentLang === 'ru' ? "Email адрес" : "Email address";
+            document.getElementById('regPassword').placeholder = currentLang === 'ru' ? "Пароль" : "Password";
+            document.getElementById('regCode').placeholder = currentLang === 'ru' ? "6-значный код" : "6-digit code";
+            document.getElementById('profNewPassword').placeholder = currentLang === 'ru' ? "Новый пароль" : "New Password";
+            
+            // Перевод кнопки отправки кода, если она в состоянии загрузки
+            const btnReq = document.getElementById('btnReqCode');
+            if (btnReq.disabled) {
+                btnReq.innerText = currentLang === 'ru' ? "Отправка..." : "Sending...";
+            }
+        }
+
+        // Инициализация языка при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLanguage();
+        });
+
+        // --- УТИЛИТЫ UI ---
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.header-center a').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('page-' + pageId).classList.add('active');
+            document.getElementById('link-' + pageId).classList.add('active');
+        }
+
+        function showNotification(text, isError = false) {
+            const notif = document.getElementById('notification');
+            notif.innerText = text;
+            notif.style.background = isError ? "#ff4c4c" : "var(--color-2)";
+            notif.style.color = isError ? "#fff" : "#111";
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        function hideSplash() {
+            document.getElementById('splash-screen').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 1200);
+        }
+
+        function openModal(type) { 
+            document.getElementById(type + 'Modal').classList.add('active'); 
+        }
+        
+        function closeModal(type) { 
+            document.getElementById(type + 'Modal').classList.remove('active'); 
+        }
+        
+        function closeOnOutsideClick(e, type) { 
+            if (e.target.classList.contains('modal')) closeModal(type); 
+        }
+
+        // --- АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ---
+        
+        // Регистрация Шаг 1: Запрос кода
+        document.getElementById('registerStep1').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnReqCode');
+            btn.innerText = currentLang === 'ru' ? "Отправка..." : "Sending...";
+            btn.disabled = true;
+
+            const username = document.getElementById('regUsername').value;
+            tempEmail = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const res = await fetch(`${API_URL}/request_code`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, email: tempEmail, password})
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showNotification(currentLang === 'ru' ? "Код отправлен!" : "Code sent!");
+                    document.getElementById('registerStep1').classList.add('hidden-step');
+                    document.getElementById('registerStep2').classList.remove('hidden-step');
+                } else { 
+                    showNotification(data.detail, true); 
+                }
+            } catch (err) { 
+                showNotification(currentLang === 'ru' ? "Ошибка сервера" : "Server Error", true); 
+            } finally { 
+                btn.innerText = currentLang === 'ru' ? "Получить код" : "Get Code"; 
+                btn.disabled = false; 
+            }
+        });
+
+        // Регистрация Шаг 2: Подтверждение
+        document.getElementById('registerStep2').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = document.getElementById('regCode').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/verify_code`, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email: tempEmail, code})
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showNotification(currentLang === 'ru' ? "Успешная регистрация!" : "Registration Success!");
+                    closeModal('register');
+                    
+                    // Сброс формы
+                    setTimeout(() => {
+                        document.getElementById('registerStep1').reset();
+                        document.getElementById('registerStep2').reset();
+                        document.getElementById('registerStep2').classList.add('hidden-step');
+                        document.getElementById('registerStep1').classList.remove('hidden-step');
+                    }, 500);
+                } else { 
+                    showNotification(data.detail, true); 
+                }
+            } catch (err) { 
+                showNotification(currentLang === 'ru' ? "Ошибка сервера" : "Server Error", true); 
+            }
+        });
+
+        // Вход в аккаунт
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('logUsername').value;
+            const password = document.getElementById('logPassword').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/login`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({username, password}) 
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showNotification(currentLang === 'ru' ? "Успешный вход!" : "Login success!");
+                    closeModal('login');
+                    
+                    // Сохраняем имя текущего пользователя для профиля и админки
+                    currentUser = data.username;
+                    
+                    // Заполняем поле профиля
+                    document.getElementById('profUsername').value = currentUser;
+                    
+                    // Рендерим новые кнопки в шапке
+                    renderAuthButtons(data.username, data.role);
+                } else { 
+                    showNotification(data.detail, true); 
+                }
+            } catch (err) { 
+                showNotification(currentLang === 'ru' ? "Ошибка сервера" : "Server Error", true); 
+            }
+        });
+
+        // Генерация кнопок после входа (Профиль, Админка, Выход)
+        function renderAuthButtons(username, role) {
+            let html = `<div class="lang-switch" onclick="toggleLang()" id="langBtn">${currentLang === 'ru' ? 'EN' : 'RU'}</div>`;
+            
+            html += `<span class="user-name">[+] ${username}</span>`;
+            
+            // Кнопка Админ-панели (показывается только админам)
+            if (role === 'admin') {
+                html += `<button class="admin-btn fade-text" onclick="openAdminPanel()" data-lang="btn_admin">${translations[currentLang].btn_admin}</button>`;
+            }
+            
+            // Кнопка Профиля (новая)
+            html += `<button class="fade-text" onclick="openModal('profile')" data-lang="btn_profile">${translations[currentLang].btn_profile}</button>`;
+            
+            // Кнопка Выхода
+            html += `<button class="primary-btn fade-text" onclick="location.reload()" data-lang="btn_logout">${translations[currentLang].btn_logout}</button>`;
+            
+            document.getElementById('auth-buttons').innerHTML = html;
+        }
+
+        // --- ПРОФИЛЬ (Смена пароля) ---
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const new_password = document.getElementById('profNewPassword').value;
+
+            try {
+                const res = await fetch(`${API_URL}/update_profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, new_password: new_password })
+                });
+                
+                if (res.ok) {
+                    showNotification(currentLang === 'ru' ? "Пароль обновлен!" : "Password updated!");
+                    closeModal('profile');
+                    document.getElementById('profileForm').reset();
+                    document.getElementById('profUsername').value = currentUser; // Возвращаем ник обратно
+                } else {
+                    showNotification(currentLang === 'ru' ? "Ошибка обновления" : "Update error", true);
+                }
+            } catch (err) {
+                showNotification(currentLang === 'ru' ? "Ошибка сервера" : "Server Error", true);
+            }
+        });
+
+        // --- АДМИН-ПАНЕЛЬ ---
+        async function openAdminPanel() { 
+            openModal('admin'); 
+            loadUsers(); 
+        }
+        
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({requester: currentUser}) 
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    const tbody = document.getElementById('usersTableBody');
+                    tbody.innerHTML = '';
+                    
+                    data.users.forEach(u => {
+                        const nameClass = u.is_banned ? 'class="banned-text"' : '';
+                        const status = u.is_banned ? '<span style="color:#ff4c4c">Banned</span>' : '<span style="color:#4caf50">Active</span>';
+                        
+                        const banBtn = u.is_banned 
+                            ? `<button class="action-btn btn-unban" onclick="adminAction('${u.username}', 'unban')">Unban</button>` 
+                            : `<button class="action-btn btn-ban" onclick="adminAction('${u.username}', 'ban')">Ban</button>`;
+                            
+                        const roleBtn = u.role === 'admin' 
+                            ? `<button class="action-btn btn-dem" onclick="adminAction('${u.username}', 'demote')">- Admin</button>` 
+                            : `<button class="action-btn btn-prom" onclick="adminAction('${u.username}', 'promote')">+ Admin</button>`;
+                            
+                        tbody.innerHTML += `
+                            <tr>
+                                <td ${nameClass}>${u.username}</td>
+                                <td>${u.role}</td>
+                                <td>${status}</td>
+                                <td>${u.username !== currentUser ? banBtn + roleBtn : '<i>You</i>'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (e) {
+                showNotification(currentLang === 'ru' ? "Ошибка загрузки" : "Load error", true);
+            }
+        }
+        
+        async function adminAction(targetUser, actionType) {
+            try {
+                const res = await fetch(`${API_URL}/admin/action`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({requester: currentUser, target: targetUser, action: actionType}) 
+                });
+                if (res.ok) {
+                    loadUsers(); // Обновляем таблицу после действия
+                }
+            } catch (e) {
+                showNotification(currentLang === 'ru' ? "Ошибка действия" : "Action error", true);
+            }
+        }
+    </script>
+</body>
+</html>
+
+
